@@ -1,0 +1,33 @@
+name: Generate Index
+
+on:
+  push:
+    branches:
+      - frg
+  workflow_dispatch:
+
+jobs:
+  generate-index:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Generate file list
+      run: |
+        echo '<!DOCTYPE html><html><head><title>Index of Files</title></head><body><h1>Index of Files</h1><ul>' > index.html
+        find . -type f ! -path "./.git/*" ! -name "index.html" | while read file; do
+          echo "<li><a href=\"$file\">$file</a></li>" >> index.html
+        done
+        echo '</ul></body></html>' >> index.html
+
+    - name: Commit and push changes
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add index.html
+        git commit -m 'Generate index.html'
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
